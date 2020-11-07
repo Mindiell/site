@@ -35,8 +35,18 @@
           <img alt="" src="{{ url_for('post_image', path=post._image) }}" />
           <input name="_image_path" id="_image_path" value="{{ post._image }}" type="hidden"/> 
           <input type="submit" name="delete_image" value="Supprimer l'image" class="button" />
+        {% else %}
+          <input name="image" id="image" type="file" value="{{ post.image }}" />
         {% endif %}
-        <input name="image" id="image" type="file" value="{{ post.image }}" />
+      </label>
+      <label>Fichier joint
+        {% if post._attachment %}
+          <img alt="" src="{{ url_for('post_attachment', path=post._attachment) }}" />
+          <input name="_attachment_path" id="_attachment_path" value="{{ post._attachment }}" type="hidden"/> 
+          <input type="submit" name="delete_attachment" value="Supprimer le fichier joint" class="button" />
+        {% else %}
+          <input name="attachment" id="attachment" type="file" value="{{ post.attachment }}" />
+        {% endif %}
       </label>
       <label>Contenu de l'article
         <textarea name="content" id="content">{{ post.content }}</textarea>

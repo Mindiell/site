@@ -183,6 +183,8 @@ def save_post_admin(name, timestamp):
         abort(e.http_code)
     if "delete_image" in request.form:
         return redirect(request.url)
+    elif "delete_attachment" in request.form:
+        return redirect(request.url)
     return redirect(url_for("admin", name=name))
 
 
@@ -236,6 +238,18 @@ def post(name, timestamp):
 
 @app.route("/post_image/<path:path>")
 def post_image(path):
+    if path.count("/") != 3:
+        abort(404)
+    category, state, timestamp, name = path.split("/")
+    if category not in data.POSTS:
+        abort(404)
+    if state not in data.STATES:
+        abort(404)
+    return send_from_directory(data.root, path)
+
+
+@app.route("/post_attachment/<path:path>")
+def post_attachment(path):
     if path.count("/") != 3:
         abort(404)
     category, state, timestamp, name = path.split("/")

@@ -24,16 +24,19 @@ ACTION_REPUBLISH = 'republish'
 ACTION_TRASH = 'trash'
 ACTION_EDIT = 'edit'
 ACTION_DELETE_IMAGE = 'delete_image'
+ACTION_DELETE_ATTACHMENT = 'delete_attachment'
 ACTIONS = {
     ACTION_PUBLISH: "Publier",
     ACTION_UNPUBLISH: "Dépublier",
     ACTION_REPUBLISH: "Republier",
     ACTION_TRASH: "Supprimer",
     ACTION_EDIT: 'Editer',
-    ACTION_DELETE_IMAGE: "Supprimer l'image"
+    ACTION_DELETE_IMAGE: "Supprimer l'image",
+    ACTION_DELETE_ATTACHMENT: 'Supprimer le fichier joint',
 }
 
 IMAGE = '_image'
+ATTACHMENT = '_attachment'
 TIMESTAMP = '_timestamp'
 STATE = '_state'
 PATH = '_path'
@@ -42,6 +45,7 @@ DIR = '_dir'
 BASE_DIR = 'posts'
 BASE_FILE = 'post.xml'
 BASE_IMAGE = 'post.jpg'
+BASE_ATTACHMENT = 'post.pdf'
 
 
 class DataException(Exception):
@@ -101,6 +105,9 @@ def get_post(category, timestamp, states=None):
     image = post.get('image') or BASE_IMAGE
     if (dir / image).is_file():
         post[IMAGE] = '/'.join((category, state, timestamp, image))
+    attachment = post.get('attachment') or BASE_ATTACHMENT
+    if (dir / attachment).is_file():
+        post[ATTACHMENT] = '/'.join((category, state, timestamp, attachment))
     post[TIMESTAMP] = timestamp
     post[STATE] = state
     post[DIR] = dir
@@ -136,6 +143,9 @@ def save_post(category, timestamp, admin, form, files):
         image_path = root / form['_image_path']
         if ACTION_DELETE_IMAGE in form and image_path.exists():
             image_path.unlink()
+        else:
+            element = ElementTree.SubElement(tree, 'image')
+            element.text = image_path.name
     else:
         if 'image' in files and files['image'].filename:
             post_image = files['image']
@@ -143,9 +153,21 @@ def save_post(category, timestamp, admin, form, files):
             post_image.save(str(post.parent / filename))
             element = ElementTree.SubElement(tree, 'image')
             element.text = filename
-        elif '_image_path' in form:
-            element = ElementTree.SubElement(tree, 'image')
-            element.text = image_path.name
+
+    if '_attachment_path' in form:
+        attachment_path = root / form['_attachment_path']
+        if ACTION_DELETE_ATTACHMENT in form and attachment_path.exists():
+            attachment_path.unlink()
+        else:
+            element = ElementTree.SubElement(tree, 'attachment')
+            element.text = attachment_path.name
+    else:
+        if 'attachment' in files and files['attachment'].filename:
+            post_attachment = files['attachment']
+            filename = secure_filename(post_attachment.filename)
+            post_attachment.save(str(post.parent / filename))
+            element = ElementTree.SubElement(tree, 'attachment')
+            element.text = filename
 
     element = ElementTree.SubElement(tree, STATE_PUBLISHED)
     element.text = email.utils.formatdate(
